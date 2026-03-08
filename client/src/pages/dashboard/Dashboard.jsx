@@ -39,10 +39,10 @@ export default function Dashboard() {
 
   // Refetch ao voltar para o dashboard (ex: após concluir tarefa em disciplina)
   useEffect(() => {
-    const onFocus = () => { refetchSubj(); refetchTasks() }
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [refetchSubj, refetchTasks])
+    refetchSubj()
+    refetchTasks()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { execute: execSem   } = useAction()
   const { execute: execSubj  } = useAction()
@@ -112,7 +112,7 @@ export default function Dashboard() {
   }
 
   const handleToggleTask = (task) =>
-    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => refetchTasks())
+    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => { refetchTasks(); refetchSubj() })
 
   if (loadingSem) return <LoadingSpinner message="Carregando..." />
   if (errorSem)   return <ErrorMessage message={errorSem} onRetry={refetchSem} />
