@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useApi, useAction } from '@/hooks/useApi'
@@ -36,6 +36,13 @@ export default function Dashboard() {
 
   const { data: tasks, loading: loadingTasks, refetch: refetchTasks } =
     useApi(() => tasksService.list({ done: false }))
+
+  // Refetch ao voltar para o dashboard (ex: após concluir tarefa em disciplina)
+  useEffect(() => {
+    const onFocus = () => { refetchSubj(); refetchTasks() }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refetchSubj, refetchTasks])
 
   const { execute: execSem   } = useAction()
   const { execute: execSubj  } = useAction()
