@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── CSS Variables por tema ── */
+  :root {
+    --accent:     #c8f560;
+    --accent-fg:  #0d0e10;
+    --accent-d:   #a8d445;
+
+    --bg:       #0d0e10;
+    --bg2:      #0a0b0d;
+    --surface:  #141618;
+    --surface2: #1a1d21;
+    --surface3: #21252b;
+    --border:   #272b33;
+    --border2:  #333840;
+    --text:     #e4e6ec;
+    --text2:    #9aa0b0;
+    --text3:    #5c6270;
+  }
+
+  .light {
+    --accent:     #4a5ae8;
+    --accent-fg:  #ffffff;
+    --accent-d:   #3848d0;
+
+    --bg:       #f2f3f7;
+    --bg2:      #e8eaf0;
+    --surface:  #ffffff;
+    --surface2: #f0f1f5;
+    --surface3: #e4e6ed;
+    --border:   #dde0e9;
+    --border2:  #c8ccd8;
+    --text:     #1a1d26;
+    --text2:    #5a6272;
+    --text3:    #9aa0b4;
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply h-full font-body antialiased;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  #root {
+    @apply h-full;
+  }
+
+  /* Scrollbar customizada */
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+}
+
+@layer components {
+  /* ── Card base ── */
+  .cortex-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    @apply rounded-lg overflow-hidden;
+  }
+
+  /* ── Input base ── */
+  .cortex-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    @apply rounded-sm px-4 py-2.5 text-sm font-body outline-none transition-all duration-150;
+  }
+
+  .cortex-input::placeholder {
+    color: var(--text3);
+  }
+
+  .cortex-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+    background: var(--surface2);
+  }
+
+  /* ── Button variants ── */
+  .btn-accent {
+    background: var(--accent);
+    color: var(--accent-fg);
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-medium
+           transition-all duration-150 cursor-pointer border-none font-body whitespace-nowrap;
+  }
+
+  .btn-accent:hover {
+    filter: brightness(1.07);
+    @apply -translate-y-px;
+  }
+
+  .btn-accent:active {
+    @apply scale-[0.97];
+  }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-sm text-sm font-medium
+           transition-all duration-150 cursor-pointer font-body whitespace-nowrap;
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface3);
+  }
+
+  /* ── Badge variants ── */
+  .badge-red    { @apply text-[10px] font-semibold px-2 py-0.5 rounded-full; background: rgba(255,92,92,0.15); color: #ff7070; }
+  .badge-yellow { @apply text-[10px] font-semibold px-2 py-0.5 rounded-full; background: rgba(245,166,35,0.15); color: #f5b84a; }
+  .badge-green  { @apply text-[10px] font-semibold px-2 py-0.5 rounded-full; background: rgba(200,245,96,0.15); color: #aad448; }
+  .badge-blue   { @apply text-[10px] font-semibold px-2 py-0.5 rounded-full; background: rgba(92,107,255,0.15); color: #8b99ff; }
+
+  /* ── Sidebar item ── */
+  .sidebar-item {
+    @apply flex items-center gap-2.5 px-2.5 py-2 rounded-sm text-[13.5px] cursor-pointer
+           transition-all duration-150 mb-px select-none;
+    color: var(--text2);
+  }
+
+  .sidebar-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .sidebar-item.active {
+    background: var(--surface2);
+    color: var(--text);
+    @apply font-medium;
+  }
+}
