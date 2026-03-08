@@ -5,9 +5,12 @@ const Task     = require('../models/Task')
 // GET /api/semesters/:semesterId/subjects
 async function list(req, res, next) {
   try {
+    const { semesterId } = req.params
+    if (!semesterId || semesterId === 'undefined') return res.json([])
+
     const subjects = await Subject.find({
       user: req.user._id,
-      semester: req.params.semesterId,
+      semester: semesterId,
     }).sort({ createdAt: 1 })
 
     // Calcula progresso por tarefas concluídas
