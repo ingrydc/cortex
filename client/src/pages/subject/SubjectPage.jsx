@@ -6,6 +6,7 @@ import { materialsService } from '@/services/materials'
 import { notesService } from '@/services/tasks'
 import { LoadingSpinner, ErrorMessage, EmptyState } from '@/components/ui'
 import NotesTab from './NotesTab'
+import TasksTab from './TasksTab'
 
 const TYPE_META = {
   pdf:   { icon: '📄', bg: 'rgba(255,92,92,0.12)',   label: 'PDF'  },
