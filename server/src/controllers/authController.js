@@ -2,7 +2,7 @@ const jwt  = require('jsonwebtoken')
 const User = require('../models/User')
 
 function signToken(id) {
-    return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretjwtkey', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   })
 }
@@ -49,4 +49,26 @@ async function me(req, res) {
   res.json({ user: req.user })
 }
 
-module.exports = { register, login, me }
+// PATCH /api/auth/me
+async function updateMe(req, res, next) {
+  try {
+    const allowed = ['name', 'course', 'avatar']
+    const updates = {}
+    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k] })
+
+    // Troca de senha
+    if (req.body.newPassword) {
+      if (!req.body.currentPassword) return res.status(400).json({ message: 'Senha atual obrigatória.' })
+      const user = await User.findById(req.user._id).select('+password')
+      const match = await user.comparePassword(req.body.currentPassword)
+      if (!match) return res.status(401).json({ message: 'Senha atual incorreta.' })
+      user.password = req.body.newPassword
+      await user.save()
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true })
+    res.json({ user })
+  } catch (err) { next(err) }
+}
+
+module.exports = { register, login, me, updateMe }

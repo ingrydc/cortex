@@ -123,10 +123,10 @@ export default function AppLayout() {
           )}
 
           </div>{/* end scrollable */}
-          {/* Usuário / logout */}
+          {/* Usuário / perfil */}
           <div className="shrink-0 px-2.5 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2.5 p-2.5 rounded-sm cursor-pointer transition-all"
-              onClick={logout} title="Sair da conta"
+              onClick={() => { navigate('/perfil'); setSidebarOpen(false) }} title="Ver perfil"
               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >

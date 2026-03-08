@@ -9,6 +9,7 @@ import LoginPage    from '@/pages/auth/LoginPage'
 import Dashboard    from '@/pages/dashboard/Dashboard'
 import SubjectPage  from '@/pages/subject/SubjectPage'
 import CalendarPage from '@/pages/dashboard/CalendarPage'
+import ProfilePage  from '@/pages/profile/ProfilePage'
 
 // Rota protegida — redireciona para /login se não autenticado
 function PrivateRoute({ children }) {
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="dashboard"          element={<Dashboard />} />
         <Route path="disciplina/:id"     element={<SubjectPage />} />
         <Route path="calendario"         element={<CalendarPage />} />
+        <Route path="perfil"              element={<ProfilePage />} />
       </Route>
 
       {/* Fallback */}
