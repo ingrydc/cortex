@@ -224,7 +224,6 @@ export default function SubjectPage() {
           <TasksTab subjectId={id} subjectColor={subject?.color} />
         )}
 
-
         {/* ── ABA: INFORMAÇÕES ── */}
         {activeNav === 'info' && (
           <div className="cortex-card p-5 max-w-md">
