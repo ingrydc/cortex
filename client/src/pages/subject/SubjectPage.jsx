@@ -221,11 +221,9 @@ export default function SubjectPage() {
 
         {/* ── ABA: TAREFAS ── */}
         {activeNav === 'tasks' && (
-          <EmptyState icon="✓" title="Tarefas desta disciplina"
-            description="Gerencie as tarefas no Calendário."
-            action={<button className="btn-ghost" onClick={() => navigate('/calendario')}>Ir para o calendário →</button>}
-          />
+          <TasksTab subjectId={id} subjectColor={subject?.color} />
         )}
+
 
         {/* ── ABA: INFORMAÇÕES ── */}
         {activeNav === 'info' && (
