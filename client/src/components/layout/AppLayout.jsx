@@ -31,12 +31,12 @@ export default function AppLayout() {
         >☰</button>
 
         {/* Logo */}
-        <span className="font-display text-xl font-bold tracking-tight shrink-0 cursor-pointer"
-          style={{ color: 'var(--accent)' }}
+        <img 
+          src="/favicon-32x32.png" 
+          alt="Cortex Logo" 
+          className="w-7 h-7 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => navigate('/dashboard')}
-        >
-          cortex<span style={{ color: 'var(--text)' }}>.</span>
-        </span>
+        />
 
         {/* Nav desktop */}
         <nav className="hidden md:flex gap-1 flex-1 justify-center">
@@ -92,14 +92,14 @@ export default function AppLayout() {
               Geral
             </div>
             {[
-              { to: '/dashboard',  icon: '⌂',  label: 'Dashboard'  },
+              { to: '/dashboard',  icon: <img src="/favicon-32x32.png" className="w-4 h-4" alt="" />,  label: 'Dashboard'  },
               { to: '/calendario', icon: '📅', label: 'Calendário' },
             ].map(({ to, icon, label }) => (
               <NavLink key={to} to={to}
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
               >
-                <span className="w-4 text-center text-sm">{icon}</span> {label}
+                <span className="w-4 flex items-center justify-center text-sm">{icon}</span> {label}
               </NavLink>
             ))}
           </div>
@@ -155,7 +155,7 @@ export default function AppLayout() {
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
         {[
-          { to: '/dashboard',  icon: '⌂',  label: 'Dashboard'  },
+          { to: '/dashboard',  icon: <img src="/favicon-32x32.png" className="w-5 h-5" alt="" />,  label: 'Dashboard'  },
           { to: '/calendario', icon: '📅', label: 'Calendário' },
         ].map(({ to, icon, label }) => (
           <NavLink key={to} to={to}
@@ -166,7 +166,7 @@ export default function AppLayout() {
               paddingBottom: `calc(10px + env(safe-area-inset-bottom))`,
             })}
           >
-            <span className="text-xl leading-none">{icon}</span>
+            <span className="flex items-center justify-center h-6">{icon}</span>
             <span className="text-[10px] font-medium">{label}</span>
           </NavLink>
         ))}
