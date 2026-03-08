@@ -1,0 +1,22 @@
+# Dependências
+node_modules/
+
+# Ambiente (NUNCA commitar o .env real)
+.env
+.env.local
+.env.production
+
+# Uploads locais (se rodar sem S3)
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
