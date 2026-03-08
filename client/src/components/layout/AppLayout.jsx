@@ -82,10 +82,10 @@ export default function AppLayout() {
           className={`flex flex-col shrink-0 z-50 transition-transform duration-300
             fixed md:sticky left-0 top-0
             ${sidebarOpen ? 'translate-x-0 shadow-panel' : '-translate-x-full md:translate-x-0'}`}
-          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', height: '100vh', top: 0 }}
+          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', height: 'calc(100vh - 48px)', top: 48 }}
         >
           {/* Scrollable nav area */}
-          <div className="flex-1 overflow-y-auto py-3.5">
+          <div className="flex-1 overflow-y-auto py-2">
           {/* Geral */}
           <div className="px-2.5 mb-1">
             <div className="text-[10px] font-medium uppercase tracking-widest px-2 py-1.5" style={{ color: 'var(--text3)' }}>
