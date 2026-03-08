@@ -118,8 +118,8 @@ export default function LoginPage() {
       await register({ name: `${name} ${surname}`.trim(), email, password, course })
       setSuccess('Conta criada! Bem-vinda ao Cortex 🎉')
       setTimeout(() => navigate('/dashboard'), 1000)
-    } catch {
-      setError('Erro ao criar conta. Tente novamente.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }

@@ -2,7 +2,7 @@ const jwt  = require('jsonwebtoken')
 const User = require('../models/User')
 
 function signToken(id) {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecretjwtkey', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   })
 }
