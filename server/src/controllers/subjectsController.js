@@ -49,7 +49,7 @@ async function listMaterials(req, res, next) {
 // GET /api/subjects (todas do usuário)
 async function listAll(req, res, next) {
   try {
-    const subjects = await Subject.find({ user: req.user._id })
+    const subjects = await Subject.find({ user: req.user._id, semester: { $exists: true, $ne: null } })
       .populate('semester', 'name')
       .sort({ createdAt: 1 })
 
