@@ -46,6 +46,24 @@ async function listMaterials(req, res, next) {
   } catch (err) { next(err) }
 }
 
+// GET /api/subjects (todas do usuário)
+async function listAll(req, res, next) {
+  try {
+    const subjects = await Subject.find({ user: req.user._id })
+      .populate('semester', 'name')
+      .sort({ createdAt: 1 })
+
+    const withProgress = await Promise.all(subjects.map(async (s) => {
+      const total = await Task.countDocuments({ user: req.user._id, subject: s._id })
+      const done  = await Task.countDocuments({ user: req.user._id, subject: s._id, done: true })
+      const progress = total === 0 ? 0 : Math.round((done / total) * 100)
+      return { ...s.toJSON(), progress }
+    }))
+
+    res.json(withProgress)
+  } catch (err) { next(err) }
+}
+
 // POST /api/semesters/:semesterId/subjects
 async function create(req, res, next) {
   try {
@@ -81,4 +99,4 @@ async function remove(req, res, next) {
   } catch (err) { next(err) }
 }
 
-module.exports = { list, getOne, listMaterials, create, update, remove }
+module.exports = { list, listAll, getOne, listMaterials, create, update, remove }

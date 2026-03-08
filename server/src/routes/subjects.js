@@ -8,6 +8,7 @@ const notesCtrl     = require('../controllers/notesController')
 const router = express.Router()
 router.use(auth)
 
+router.get('/',              ctrl.listAll)
 router.get('/:id',           ctrl.getOne)
 router.get('/:id/materials', ctrl.listMaterials)
 router.patch('/:id',         ctrl.update)

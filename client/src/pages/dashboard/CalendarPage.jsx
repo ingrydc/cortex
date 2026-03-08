@@ -40,14 +40,8 @@ export default function CalendarPage() {
   const { data: tasks, loading, error, refetch } =
     useApi(() => tasksService.list())
 
-  // ── Fetch: semestres → disciplinas para o select ──
-  const { data: semesters } = useApi(() => semestersService.list())
-  const firstSemId = semesters?.[0]?._id
-  const { data: subjects } = useApi(
-    () => subjectsService.list(firstSemId),
-    [firstSemId],
-    { immediate: !!firstSemId }
-  )
+  // ── Fetch: todas as disciplinas do usuário ──
+  const { data: subjects } = useApi(() => subjectsService.listAll())
 
   const { execute: execCreate } = useAction()
   const { execute: execToggle } = useAction()

@@ -2,6 +2,7 @@ import api from './api'
 
 export const subjectsService = {
   list:          (semesterId)       => api.get(`/semesters/${semesterId}/subjects`),
+  listAll:       ()                 => api.get('/subjects'),
   getOne:        (id)               => api.get(`/subjects/${id}`),
   create:        (semesterId, data) => api.post(`/semesters/${semesterId}/subjects`, data),
   update:        (id, data)         => api.patch(`/subjects/${id}`, data),
