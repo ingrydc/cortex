@@ -1,5 +1,6 @@
 const Subject  = require('../models/Subject')
 const Material = require('../models/Material')
+const Task     = require('../models/Task')
 
 // GET /api/semesters/:semesterId/subjects
 async function list(req, res, next) {
@@ -8,7 +9,16 @@ async function list(req, res, next) {
       user: req.user._id,
       semester: req.params.semesterId,
     }).sort({ createdAt: 1 })
-    res.json(subjects)
+
+    // Calcula progresso por tarefas concluídas
+    const withProgress = await Promise.all(subjects.map(async (s) => {
+      const total = await Task.countDocuments({ user: req.user._id, subject: s._id })
+      const done  = await Task.countDocuments({ user: req.user._id, subject: s._id, done: true })
+      const progress = total === 0 ? 0 : Math.round((done / total) * 100)
+      return { ...s.toJSON(), progress }
+    }))
+
+    res.json(withProgress)
   } catch (err) { next(err) }
 }
 
@@ -18,7 +28,10 @@ async function getOne(req, res, next) {
     const subject = await Subject.findOne({ _id: req.params.id, user: req.user._id })
       .populate('semester', 'name year period')
     if (!subject) return res.status(404).json({ message: 'Disciplina não encontrada.' })
-    res.json(subject)
+    const total = await Task.countDocuments({ user: req.user._id, subject: subject._id })
+    const done  = await Task.countDocuments({ user: req.user._id, subject: subject._id, done: true })
+    const progress = total === 0 ? 0 : Math.round((done / total) * 100)
+    res.json({ ...subject.toJSON(), progress })
   } catch (err) { next(err) }
 }
 
