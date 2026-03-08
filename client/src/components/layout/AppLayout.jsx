@@ -79,11 +79,13 @@ export default function AppLayout() {
 
         {/* ── SIDEBAR ── */}
         <aside
-          className={`flex flex-col shrink-0 py-3.5 overflow-y-auto z-50 transition-transform duration-300
-            fixed md:relative left-0
+          className={`flex flex-col shrink-0 z-50 transition-transform duration-300
+            fixed md:sticky left-0 top-0
             ${sidebarOpen ? 'translate-x-0 shadow-panel' : '-translate-x-full md:translate-x-0'}`}
-          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', top: 48, bottom: 0, height: 'calc(100vh - 48px)' }}
+          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', height: '100vh', top: 0 }}
         >
+          {/* Scrollable nav area */}
+          <div className="flex-1 overflow-y-auto py-3.5">
           {/* Geral */}
           <div className="px-2.5 mb-1">
             <div className="text-[10px] font-medium uppercase tracking-widest px-2 py-1.5" style={{ color: 'var(--text3)' }}>
@@ -120,8 +122,9 @@ export default function AppLayout() {
             </div>
           )}
 
+          </div>{/* end scrollable */}
           {/* Usuário / logout */}
-          <div className="mt-auto px-2.5 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="shrink-0 px-2.5 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2.5 p-2.5 rounded-sm cursor-pointer transition-all"
               onClick={logout} title="Sair da conta"
               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
