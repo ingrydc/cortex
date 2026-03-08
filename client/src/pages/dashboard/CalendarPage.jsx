@@ -182,7 +182,7 @@ export default function CalendarPage() {
                   <div key={i}
                     className="aspect-square flex flex-col items-center justify-center rounded-md cursor-pointer text-[13px] relative transition-all duration-150"
                     style={{
-                      color:      !d.current ? 'var(--text3)' : 'var(--text)',
+                      color:      isToday ? 'var(--accent-fg)' : !d.current ? 'var(--text3)' : 'var(--text)',
                       background: isToday ? 'var(--accent)' : 'transparent',
                       fontWeight: isToday ? 700 : 400,
                     }}
