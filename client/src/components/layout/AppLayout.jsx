@@ -80,9 +80,9 @@ export default function AppLayout() {
         {/* ── SIDEBAR ── */}
         <aside
           className={`flex flex-col shrink-0 py-3.5 overflow-y-auto z-50 transition-transform duration-300
-            fixed md:relative inset-y-0 left-0
+            fixed md:relative left-0
             ${sidebarOpen ? 'translate-x-0 shadow-panel' : '-translate-x-full md:translate-x-0'}`}
-          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', top: 48 }}
+          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', top: 48, bottom: 'calc(49px + env(safe-area-inset-bottom))' }}
         >
           {/* Geral */}
           <div className="px-2.5 mb-1">
