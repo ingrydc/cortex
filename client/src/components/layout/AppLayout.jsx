@@ -131,7 +131,7 @@ export default function AppLayout() {
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                style={{ background: 'linear-gradient(135deg, #5c6bff, #c8f560)', color: '#0d0e10' }}
+                style={{ background: user?.avatar || 'linear-gradient(135deg, #5c6bff, #c8f560)', color: '#0d0e10' }}
               >
                 {initials}
               </div>
