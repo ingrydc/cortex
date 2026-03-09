@@ -1,9 +1,7 @@
 {
-  "buildCommand": "npx vite build",
+  "installCommand": "npm install",
+  "buildCommand": "npm install vite --save-dev && npm run build",
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
