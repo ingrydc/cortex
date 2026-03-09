@@ -179,9 +179,16 @@ export default function CalendarPage() {
                       color:      isToday ? 'var(--accent-fg)' : !d.current ? 'var(--text3)' : 'var(--text)',
                       background: isToday ? 'var(--accent)' : 'transparent',
                       fontWeight: isToday ? 700 : 400,
+                      opacity:    !d.current ? 0.35 : 1,
                     }}
                     onMouseEnter={e => { if (!isToday) e.currentTarget.style.background = 'var(--surface2)' }}
-                    onMouseLeave={e => { if (!isToday) e.currentTarget.style.background = 'transparent' }}
+                    onMouseLeave={e => { if (!isToday) e.currentTarget.style.background = isToday ? 'var(--accent)' : 'transparent' }}
+                    onClick={() => {
+                      if (!d.current) return
+                      const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`
+                      setNewTask(p => ({ ...p, dueDate: dateStr }))
+                      setShowModal(true)
+                    }}
                   >
                     {d.day}
                     {hasEvent && (
