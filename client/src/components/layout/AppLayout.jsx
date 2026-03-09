@@ -82,7 +82,13 @@ export default function AppLayout() {
           className={`flex flex-col shrink-0 z-50 transition-transform duration-300
             fixed md:sticky left-0 top-0
             ${sidebarOpen ? 'translate-x-0 shadow-panel' : '-translate-x-full md:translate-x-0'}`}
-          style={{ width: 228, background: 'var(--surface)', borderRight: '1px solid var(--border)', height: 'calc(100dvh - 48px)', top: 48 }}
+          style={{
+            width: 228,
+            background: 'var(--surface)',
+            borderRight: '1px solid var(--border)',
+            top: 48,
+            height: 'calc(100dvh - 48px - 56px - env(safe-area-inset-bottom))',
+          }}
         >
           {/* Scrollable nav area */}
           <div className="flex-1 overflow-y-auto py-2">
@@ -124,7 +130,7 @@ export default function AppLayout() {
 
           </div>{/* end scrollable */}
           {/* Usuário / perfil */}
-          <div className="shrink-0 px-2.5 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="shrink-0 px-2.5 pt-3 pb-2 border-t" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-2.5 p-2.5 rounded-sm cursor-pointer transition-all"
               onClick={() => { navigate('/perfil'); setSidebarOpen(false) }} title="Ver perfil"
               onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
