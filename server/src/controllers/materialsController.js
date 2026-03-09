@@ -8,6 +8,16 @@ function mimeToType(mimetype) {
   return 'other'
 }
 
+function getPublicUrl(file) {
+  // Para PDFs e docs (raw), garante que a URL seja acessível
+  const url = file.path
+  if (file.mimetype === 'application/pdf') {
+    // Converte URL raw para URL de visualização do Cloudinary
+    return url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+  }
+  return url
+}
+
 // GET /api/semesters/:semesterId/subjects/:subjectId/materials
 async function list(req, res, next) {
   try {
@@ -19,21 +29,19 @@ async function list(req, res, next) {
   } catch (err) { next(err) }
 }
 
-// Helper interno de criação de material
 async function _createMaterial({ user, subjectId, file, category, name }) {
   return Material.create({
     user,
     subject:  subjectId,
     name:     name || file.originalname,
     type:     mimeToType(file.mimetype),
-    url:      file.path,           // Cloudinary retorna a URL em file.path
-    key:      file.filename,       // public_id do Cloudinary
+    url:      getPublicUrl(file),
+    key:      file.filename,
     size:     file.size || 0,
     category: category || 'geral',
   })
 }
 
-// POST /api/semesters/:semesterId/subjects/:subjectId/materials
 async function upload(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nenhum arquivo enviado.' })
@@ -48,7 +56,6 @@ async function upload(req, res, next) {
   } catch (err) { next(err) }
 }
 
-// POST /api/subjects/:id/materials
 async function uploadBySubject(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nenhum arquivo enviado.' })
@@ -63,7 +70,6 @@ async function uploadBySubject(req, res, next) {
   } catch (err) { next(err) }
 }
 
-// PATCH /api/materials/:id
 async function update(req, res, next) {
   try {
     const material = await Material.findOneAndUpdate(
@@ -76,18 +82,14 @@ async function update(req, res, next) {
   } catch (err) { next(err) }
 }
 
-// DELETE /api/materials/:id
 async function remove(req, res, next) {
   try {
     const material = await Material.findOneAndDelete({ _id: req.params.id, user: req.user._id })
     if (!material) return res.status(404).json({ message: 'Material não encontrado.' })
-
-    // Remove do Cloudinary
     if (material.key) {
       const resourceType = material.type === 'img' ? 'image' : 'raw'
       await cloudinary.uploader.destroy(material.key, { resource_type: resourceType })
     }
-
     res.json({ message: 'Material removido.' })
   } catch (err) { next(err) }
 }
