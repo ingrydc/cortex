@@ -34,6 +34,7 @@ export default function CalendarPage() {
   const [month, setMonth] = useState(now.getMonth())
   const [year,  setYear]  = useState(now.getFullYear())
   const [showModal, setShowModal] = useState(false)
+  const [selectedDay, setSelectedDay] = useState(null) // { day, dateStr }
   const [newTask, setNewTask] = useState({ title: '', dueDate: '', priority: 'medium', subject: '' })
 
   // ── Fetch: tarefas com dueDate ──
@@ -73,6 +74,17 @@ export default function CalendarPage() {
     .filter(t => t.dueDate && !t.done)
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
     .slice(0, 8)
+
+  // ── Tarefas do dia selecionado ──
+  const selectedDayTasks = selectedDay
+    ? (tasks ?? []).filter(t => {
+        if (!t.dueDate) return false
+        const d = new Date(t.dueDate)
+        return d.getDate() === selectedDay.day &&
+               d.getMonth() === month &&
+               d.getFullYear() === year
+      }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    : []
 
   // ── Criar tarefa ──
   const handleCreate = async () => {
@@ -177,17 +189,18 @@ export default function CalendarPage() {
                     className="aspect-square flex flex-col items-center justify-center rounded-md cursor-pointer text-[13px] relative transition-all duration-150"
                     style={{
                       color:      isToday ? 'var(--accent-fg)' : !d.current ? 'var(--text3)' : 'var(--text)',
-                      background: isToday ? 'var(--accent)' : 'transparent',
-                      fontWeight: isToday ? 700 : 400,
+                      background: isToday ? 'var(--accent)' : selectedDay?.day === d.day && d.current ? 'var(--surface2)' : 'transparent',
+                      fontWeight: isToday || (selectedDay?.day === d.day && d.current) ? 700 : 400,
                       opacity:    !d.current ? 0.35 : 1,
+                      outline:    selectedDay?.day === d.day && d.current && !isToday ? '2px solid var(--accent)' : 'none',
+                      outlineOffset: -2,
                     }}
                     onMouseEnter={e => { if (!isToday) e.currentTarget.style.background = 'var(--surface2)' }}
                     onMouseLeave={e => { if (!isToday) e.currentTarget.style.background = isToday ? 'var(--accent)' : 'transparent' }}
                     onClick={() => {
                       if (!d.current) return
                       const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`
-                      setNewTask(p => ({ ...p, dueDate: dateStr }))
-                      setShowModal(true)
+                      setSelectedDay(prev => prev?.day === d.day ? null : { day: d.day, dateStr })
                     }}
                   >
                     {d.day}
@@ -204,11 +217,73 @@ export default function CalendarPage() {
 
           {/* ── PRÓXIMOS EVENTOS ── */}
           <div className="cortex-card">
-            <div className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-[14px] font-medium">Próximos eventos</span>
+            <div className="px-4 py-3.5 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[14px] font-medium">
+                {selectedDay
+                  ? `${String(selectedDay.day).padStart(2,'0')}/${String(month+1).padStart(2,'0')}/${year}`
+                  : 'Próximos eventos'}
+              </span>
+              {selectedDay && (
+                <button className="text-[11px] px-2 py-1 rounded-sm transition-all"
+                  style={{ color: 'var(--text3)', background: 'var(--surface2)' }}
+                  onClick={() => setSelectedDay(null)}
+                >✕ limpar</button>
+              )}
             </div>
 
-            {!upcoming.length ? (
+            {selectedDay ? (
+              selectedDayTasks.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
+                  <span className="text-3xl">📭</span>
+                  <p className="text-[13px]" style={{ color: 'var(--text2)' }}>Nenhuma tarefa neste dia</p>
+                  <button className="btn-accent text-[12px] mt-1"
+                    onClick={() => {
+                      setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr }))
+                      setShowModal(true)
+                    }}
+                  >+ Criar tarefa</button>
+                </div>
+              ) : (
+                <div className="p-1.5">
+                  {selectedDayTasks.map(t => {
+                    const subj = subjects?.find(s => s._id === (t.subject?._id || t.subject))
+                    return (
+                      <div key={t._id}
+                        className="group px-3 py-3 rounded-sm cursor-pointer transition-all duration-150 mb-0.5"
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div
+                            className="w-4 h-4 rounded shrink-0 mt-0.5 flex items-center justify-center text-[10px] transition-all cursor-pointer"
+                            style={{ border: '1.5px solid var(--border2)', background: t.done ? 'var(--accent)' : 'transparent' }}
+                            onClick={() => handleToggle(t)}
+                          >{t.done && '✓'}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 mb-0.5">
+                              {t.priority === 'high' && <span className="badge-red text-[9px] px-1.5 py-0">urgente</span>}
+                              {t.priority === 'medium' && <span className="badge-yellow text-[9px] px-1.5 py-0">médio</span>}
+                            </div>
+                            <div className="text-[13px] font-medium truncate" style={t.done ? { textDecoration: 'line-through', color: 'var(--text3)' } : {}}>{t.title}</div>
+                            {subj && (
+                              <div className="flex items-center gap-1.5 mt-1 text-[11.5px]" style={{ color: 'var(--text2)' }}>
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: subj.color }} />
+                                {subj.name}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
+                            style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
+                            onClick={() => handleDelete(t._id)}
+                          >✕</button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            ) : !upcoming.length ? (
               <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
                 <span className="text-3xl">🎉</span>
                 <p className="text-[13px]" style={{ color: 'var(--text2)' }}>Nenhum evento próximo!</p>
