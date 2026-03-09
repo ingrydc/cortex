@@ -13,11 +13,12 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const isImage = file.mimetype.startsWith('image/')
+    const isPDF   = file.mimetype === 'application/pdf'
     return {
-      folder:          `cortex/${req.user.id}`,
-      resource_type:   isImage ? 'image' : 'raw',
-      allowed_formats: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'webp'],
-      public_id:       `${Date.now()}-${file.originalname.replace(/[^a-z0-9.]/gi, '-').toLowerCase()}`,
+      folder:        `cortex/${req.user.id}`,
+      resource_type: isImage ? 'image' : 'raw',
+      format:        isPDF ? 'pdf' : undefined,
+      public_id:     `${Date.now()}-${file.originalname.replace(/[^a-z0-9.]/gi, '-').toLowerCase()}`,
     }
   },
 })
