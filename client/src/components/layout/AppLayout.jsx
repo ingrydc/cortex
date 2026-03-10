@@ -72,14 +72,14 @@ export default function AppLayout() {
 
         {/* Overlay mobile */}
         {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-40 md:hidden"
+          <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-[60] md:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* ── SIDEBAR ── */}
         <aside
-          className={`flex flex-col shrink-0 z-50 transition-transform duration-300
+          className={`flex flex-col shrink-0 z-[70] transition-transform duration-300
             fixed md:sticky left-0 top-0
             ${sidebarOpen ? 'translate-x-0 shadow-panel' : '-translate-x-full md:translate-x-0'}`}
           style={{
