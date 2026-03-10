@@ -87,7 +87,7 @@ export default function AppLayout() {
             background: 'var(--surface)',
             borderRight: '1px solid var(--border)',
             top: 48,
-            height: 'calc(100dvh - 48px - 56px - env(safe-area-inset-bottom))',
+            height: 'calc(100dvh - 48px)',
           }}
         >
           {/* Scrollable nav area */}
