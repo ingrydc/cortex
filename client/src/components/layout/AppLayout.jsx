@@ -21,7 +21,7 @@ export default function AppLayout() {
     <div className="flex flex-col h-full">
 
       {/* ── TOPBAR ── */}
-      <header className="flex items-center gap-2.5 px-3.5 shrink-0 border-b z-50"
+      <header className="flex items-center gap-2.5 px-3.5 shrink-0 border-b z-50 fixed top-0 left-0 right-0 md:sticky"
         style={{ height: 48, background: 'var(--bg2)', borderColor: 'var(--border)' }}
       >
         {/* Hamburger mobile */}
@@ -68,7 +68,7 @@ export default function AppLayout() {
       </header>
 
       {/* ── BODY ── */}
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden relative mt-[48px] md:mt-0">
 
         {/* Overlay mobile */}
         {sidebarOpen && (
