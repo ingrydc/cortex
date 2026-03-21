@@ -161,7 +161,7 @@ export default function AppLayout() {
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
         {[
-          { to: '/dashboard',  icon: '⌂',  label: 'Dashboard'  },
+          { to: '/dashboard',  icon: '🏠',  label: 'Dashboard'  },
           { to: '/calendario', icon: '📅', label: 'Calendário' },
         ].map(({ to, icon, label }) => (
           <NavLink key={to} to={to}
