@@ -98,7 +98,7 @@ export default function AppLayout() {
               Geral
             </div>
             {[
-              { to: '/dashboard',  icon: '⌂',  label: 'Dashboard'  },
+              { to: '/dashboard',  icon: '🏠',  label: 'Dashboard'  },
               { to: '/calendario', icon: '📅', label: 'Calendário' },
             ].map(({ to, icon, label }) => (
               <NavLink key={to} to={to}
