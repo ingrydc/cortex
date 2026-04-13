@@ -154,7 +154,7 @@ export default function CalendarPage() {
           </p>
         </div>
         <button className="btn-accent" onClick={() => {
-          if (selectedDay) setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr + 'T23:59' }))
+          if (selectedDay) setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr }))
           setShowModal(true)
         }}>+ Nova tarefa</button>
       </div>
@@ -254,7 +254,7 @@ export default function CalendarPage() {
                   <p className="text-[13px]" style={{ color: 'var(--text2)' }}>Nenhuma tarefa neste dia</p>
                   <button className="btn-accent text-[12px] mt-1"
                     onClick={() => {
-                      setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr + 'T23:59' }))
+                      setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr }))
                       setShowModal(true)
                     }}
                   >+ Criar tarefa</button>
@@ -369,7 +369,7 @@ export default function CalendarPage() {
           </FormField>
 
           <FormField label="Data de entrega">
-            <input className="cortex-input" type="datetime-local"
+            <input className="cortex-input" type="date"
               value={newTask.dueDate}
               onChange={e => setNewTask(p => ({ ...p, dueDate: e.target.value }))}
               style={{ colorScheme: 'dark' }}
