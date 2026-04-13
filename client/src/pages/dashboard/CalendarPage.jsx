@@ -34,8 +34,10 @@ export default function CalendarPage() {
   const [month, setMonth] = useState(now.getMonth())
   const [year,  setYear]  = useState(now.getFullYear())
   const [showModal, setShowModal] = useState(false)
-  const [selectedDay, setSelectedDay] = useState(null) // { day, dateStr }
+  const [selectedDay, setSelectedDay] = useState(null)
   const [newTask, setNewTask] = useState({ title: '', dueDate: '', priority: 'medium', subject: '' })
+  const [editTask,  setEditTask]  = useState(null)
+  const [activeTask, setActiveTask] = useState(null)
 
   // ── Fetch: tarefas com dueDate ──
   const { data: tasks, loading, error, refetch } =
@@ -47,6 +49,7 @@ export default function CalendarPage() {
   const { execute: execCreate } = useAction()
   const { execute: execToggle } = useAction()
   const { execute: execDelete } = useAction()
+  const { execute: execUpdate } = useAction()
 
   // ── Navegação de mês ──
   const prevMonth = () => {
@@ -110,6 +113,25 @@ export default function CalendarPage() {
         setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' })
         refetch()
       }
+    )
+  }
+
+  // ── Editar tarefa ──
+  const handleOpenEdit = (task) => {
+    setEditTask(task)
+    setNewTask({
+      title:    task.title,
+      dueDate:  task.dueDate ? task.dueDate.substring(0, 10) : '',
+      priority: task.priority || 'medium',
+      subject:  task.subject?._id || task.subject || '',
+    })
+  }
+
+  const handleUpdate = async () => {
+    if (!newTask.title.trim()) return
+    await execUpdate(
+      () => tasksService.update(editTask._id, newTask),
+      () => { setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }); refetch() }
     )
   }
 
@@ -289,11 +311,18 @@ export default function CalendarPage() {
                               </div>
                             )}
                           </div>
-                          <button
-                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
-                            style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
-                            onClick={() => handleDelete(t._id)}
-                          >✕</button>
+                          <div className="flex gap-1 shrink-0 mt-0.5">
+                            <button
+                              className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                              style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
+                              onClick={() => handleOpenEdit(t)}
+                            >✏</button>
+                            <button
+                              className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                              style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
+                              onClick={() => handleDelete(t._id)}
+                            >✕</button>
+                          </div>
                         </div>
                       </div>
                     )
@@ -339,12 +368,19 @@ export default function CalendarPage() {
                             </div>
                           )}
                         </div>
-                        {/* delete (aparece no hover) */}
-                        <button
-                          className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5"
-                          style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
-                          onClick={() => handleDelete(t._id)}
-                        >✕</button>
+                        {/* ações */}
+                        <div className="flex gap-1 shrink-0 mt-0.5">
+                          <button
+                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                            style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
+                            onClick={() => handleOpenEdit(t)}
+                          >✏</button>
+                          <button
+                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                            style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
+                            onClick={() => handleDelete(t._id)}
+                          >✕</button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -357,7 +393,7 @@ export default function CalendarPage() {
       )}
 
       {/* ── MODAL NOVA TAREFA ── */}
-      <Modal open={showModal} onClose={() => { setShowModal(false); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }} title="Nova tarefa">
+      <Modal open={showModal || !!editTask} onClose={() => { setShowModal(false); setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }} title={editTask ? 'Editar tarefa' : 'Nova tarefa'}>
         <div className="flex flex-col gap-4">
 
           <FormField label="Título *">
@@ -414,8 +450,8 @@ export default function CalendarPage() {
           )}
 
           <div className="flex gap-2 justify-end pt-1">
-            <button className="btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
-            <button className="btn-accent" onClick={handleCreate}>Criar tarefa</button>
+            <button className="btn-ghost" onClick={() => { setShowModal(false); setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }}>Cancelar</button>
+            <button className="btn-accent" onClick={editTask ? handleUpdate : handleCreate}>{editTask ? 'Salvar' : 'Criar tarefa'}</button>
           </div>
         </div>
       </Modal>

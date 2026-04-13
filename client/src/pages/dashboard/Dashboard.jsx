@@ -22,7 +22,10 @@ export default function Dashboard() {
   const [newSubject,setNewSubject]= useState({ name: '', professor: '', color: '#5c6bff' })
   const [semError,  setSemError]  = useState('')
   const [subjError, setSubjError] = useState('')
-  const [activeTab,  setActiveTab]  = useState('semestre') // 'semestre' | 'horas'
+  const [activeTab,  setActiveTab]  = useState('semestre')
+  const [editTask,   setEditTask]   = useState(null)
+  const [editForm,   setEditForm]   = useState({ title: '', dueDate: '', priority: 'medium' })
+  const [activeTask, setActiveTask] = useState(null)
 
   // ── Fetch ──
   const { data: semesters, loading: loadingSem, error: errorSem, refetch: refetchSem } =
@@ -40,6 +43,7 @@ export default function Dashboard() {
   const { execute: execSem   } = useAction()
   const { execute: execSubj  } = useAction()
   const { execute: execToggle} = useAction()
+  const { execute: execUpdate } = useAction()
 
   const greeting = () => {
     const now = new Date()
@@ -257,8 +261,8 @@ export default function Dashboard() {
                 {tasks.slice(0, 6).map(t => (
                   <div key={t._id}
                     className="flex items-start gap-2.5 px-3 py-2.5 rounded-sm cursor-pointer transition-all"
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    style={{ background: activeTask === t._id ? 'var(--surface2)' : 'transparent' }}
+                    onClick={() => setActiveTask(prev => prev === t._id ? null : t._id)}
                   >
                     <div className="w-4 h-4 rounded shrink-0 mt-0.5 flex items-center justify-center text-[10px] cursor-pointer"
                       style={t.done
@@ -278,6 +282,12 @@ export default function Dashboard() {
                     </div>
                     {t.priority === 'high'   && !t.done && <span className="badge-red shrink-0">urgente</span>}
                     {t.priority === 'medium' && !t.done && <span className="badge-yellow shrink-0">médio</span>}
+                    {activeTask === t._id && (
+                      <button className="w-5 h-5 rounded flex items-center justify-center text-[11px] shrink-0 ml-auto"
+                        style={{ background: 'var(--surface3)', color: 'var(--text2)' }}
+                        onClick={(e) => handleOpenEditTask(t, e)}
+                      >✏</button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -288,7 +298,42 @@ export default function Dashboard() {
 
       </> /* fim aba semestre */}
 
-      {/* ── Modal: Novo semestre ── */}
+      {/* ── Modal: Editar tarefa ── */}
+      <Modal open={!!editTask} onClose={() => setEditTask(null)} title="Editar tarefa">
+        <div className="flex flex-col gap-4">
+          <FormField label="Título">
+            <input className="cortex-input" value={editForm.title}
+              onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handleUpdateTask()}
+              autoFocus
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Data">
+              <input className="cortex-input" type="date"
+                value={editForm.dueDate}
+                onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))}
+                style={{ colorScheme: 'dark' }}
+              />
+            </FormField>
+            <FormField label="Prioridade">
+              <select className="cortex-input" value={editForm.priority}
+                onChange={e => setEditForm(p => ({ ...p, priority: e.target.value }))}
+                style={{ background: 'var(--surface2)' }}>
+                <option value="low">Baixa</option>
+                <option value="medium">Média</option>
+                <option value="high">Alta</option>
+              </select>
+            </FormField>
+          </div>
+          <div className="flex gap-2 justify-end pt-1">
+            <button className="btn-ghost" onClick={() => setEditTask(null)}>Cancelar</button>
+            <button className="btn-accent" onClick={handleUpdateTask}>Salvar</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal: Novo semestre ── */}}
       <Modal open={showNewSem} onClose={() => { setShowNewSem(false); setSemError('') }} title="Novo semestre">
         <div className="flex flex-col gap-4">
           {semError && (
