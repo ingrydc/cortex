@@ -124,8 +124,9 @@ export default function CalendarPage() {
   // ── Formatação de data legível ──
   const formatDate = (iso) => {
     if (!iso) return ''
-    const d   = new Date(iso)
+    const d   = parseLocalDate(iso)
     const now = new Date()
+    now.setHours(0, 0, 0, 0)
     const diff = Math.ceil((d - now) / 86400000)
 
     if (diff === 0)  return 'Hoje'
