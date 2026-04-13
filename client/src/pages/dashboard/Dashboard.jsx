@@ -42,7 +42,10 @@ export default function Dashboard() {
   const { execute: execToggle} = useAction()
 
   const greeting = () => {
-    const h = new Date().getHours()
+    const now = new Date()
+    const h = now.getHours()
+    const m = now.getMinutes()
+    if (h < 4 || (h === 4 && m <= 30)) return 'Boa madrugada'
     if (h < 12) return 'Bom dia'
     if (h < 18) return 'Boa tarde'
     return 'Boa noite'
