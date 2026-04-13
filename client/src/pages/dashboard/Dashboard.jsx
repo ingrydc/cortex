@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useApi, useAction } from '@/hooks/useApi'
@@ -37,22 +37,12 @@ export default function Dashboard() {
   const { data: tasks, loading: loadingTasks, refetch: refetchTasks } =
     useApi(() => tasksService.list({ done: false }))
 
-  // Refetch ao voltar para o dashboard (ex: após concluir tarefa em disciplina)
-  useEffect(() => {
-    refetchSubj()
-    refetchTasks()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const { execute: execSem   } = useAction()
   const { execute: execSubj  } = useAction()
   const { execute: execToggle} = useAction()
 
   const greeting = () => {
-    const now = new Date()
-    const h = now.getHours()
-    const m = now.getMinutes()
-    if (h < 4 || (h === 4 && m <= 30)) return 'Boa madrugada'
+    const h = new Date().getHours()
     if (h < 12) return 'Bom dia'
     if (h < 18) return 'Boa tarde'
     return 'Boa noite'
@@ -112,7 +102,7 @@ export default function Dashboard() {
   }
 
   const handleToggleTask = (task) =>
-    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => { refetchTasks(); refetchSubj() })
+    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => refetchTasks())
 
   if (loadingSem) return <LoadingSpinner message="Carregando..." />
   if (errorSem)   return <ErrorMessage message={errorSem} onRetry={refetchSem} />
@@ -280,7 +270,7 @@ export default function Dashboard() {
                       </div>
                       <div className="text-[11px]" style={{ color: t.priority === 'high' && !t.done ? '#ff5c5c' : 'var(--text2)' }}>
                         {t.subject?.name ?? 'Sem disciplina'}
-                        {t.dueDate ? ` · ${new Date(t.dueDate).toLocaleDateString('pt-BR')}` : ''}
+                        {t.dueDate ? ` · ${(() => { const [y,m,d] = t.dueDate.substring(0,10).split('-'); return new Date(Number(y),Number(m)-1,Number(d)).toLocaleDateString('pt-BR') })()` : ''}
                       </div>
                     </div>
                     {t.priority === 'high'   && !t.done && <span className="badge-red shrink-0">urgente</span>}
