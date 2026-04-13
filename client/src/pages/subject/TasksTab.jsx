@@ -205,7 +205,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
                 </div>
 
                 {/* Ações */}
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 shrink-0">
                   <button
                     className="text-[11px] w-6 h-6 flex items-center justify-center rounded"
                     style={{ color: 'var(--text2)', background: 'var(--surface3)' }}
