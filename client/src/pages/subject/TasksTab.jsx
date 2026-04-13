@@ -31,8 +31,9 @@ function formatDate(iso) {
 }
 
 export default function TasksTab({ subjectId, subjectColor }) {
-  const [showForm,  setShowForm]  = useState(false)
-  const [editTask,  setEditTask]  = useState(null) // tarefa sendo editada
+  const [showForm,    setShowForm]    = useState(false)
+  const [editTask,    setEditTask]    = useState(null)
+  const [activeTask,  setActiveTask]  = useState(null) // task id com botões visíveis
   const [form,      setForm]      = useState(EMPTY_FORM)
   const [filter,    setFilter]    = useState('open')
   const [formError, setFormError] = useState('')
@@ -164,10 +165,9 @@ export default function TasksTab({ subjectId, subjectColor }) {
             const late = task.dueDate && parseLocalDate(task.dueDate) < new Date().setHours(0,0,0,0) && !task.done
             return (
               <div key={task._id}
-                className="flex items-start gap-3 px-4 py-3.5 group transition-all"
-                style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                className="flex items-start gap-3 px-4 py-3.5 transition-all cursor-pointer"
+                style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none', background: activeTask === task._id ? 'var(--surface2)' : 'transparent' }}
+                onClick={() => setActiveTask(prev => prev === task._id ? null : task._id)}
               >
                 {/* Checkbox */}
                 <div
@@ -205,7 +205,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
                 </div>
 
                 {/* Ações */}
-                <div className="flex gap-1 shrink-0">
+                <div className="flex gap-1 shrink-0 transition-all" style={{ opacity: activeTask === task._id ? 1 : 0, pointerEvents: activeTask === task._id ? 'auto' : 'none' }}>
                   <button
                     className="text-[11px] w-6 h-6 flex items-center justify-center rounded"
                     style={{ color: 'var(--text2)', background: 'var(--surface3)' }}
