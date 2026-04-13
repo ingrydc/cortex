@@ -270,7 +270,7 @@ export default function Dashboard() {
                       </div>
                       <div className="text-[11px]" style={{ color: t.priority === 'high' && !t.done ? '#ff5c5c' : 'var(--text2)' }}>
                         {t.subject?.name ?? 'Sem disciplina'}
-                        {t.dueDate ? ` · ${(() => { const [y,m,d] = t.dueDate.substring(0,10).split('-'); return new Date(Number(y),Number(m)-1,Number(d)).toLocaleDateString('pt-BR') })()` : ''}
+                        {t.dueDate ? ' · ' + (() => { const [y,m,d] = t.dueDate.substring(0,10).split('-'); return new Date(Number(y),Number(m)-1,Number(d)).toLocaleDateString('pt-BR') })() : ''}
                       </div>
                     </div>
                     {t.priority === 'high'   && !t.done && <span className="badge-red shrink-0">urgente</span>}
