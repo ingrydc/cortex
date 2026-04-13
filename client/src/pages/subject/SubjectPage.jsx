@@ -4,9 +4,8 @@ import { useApi, useAction } from '@/hooks/useApi'
 import { subjectsService } from '@/services/subjects'
 import { materialsService } from '@/services/materials'
 import { notesService } from '@/services/tasks'
-import { LoadingSpinner, ErrorMessage, EmptyState } from '@/components/ui'
+import { LoadingSpinner, ErrorMessage, EmptyState, Modal, FormField } from '@/components/ui'
 import NotesTab from './NotesTab'
-import TasksTab from './TasksTab'
 
 const TYPE_META = {
   pdf:   { icon: '📄', bg: 'rgba(255,92,92,0.12)',   label: 'PDF'  },
@@ -26,8 +25,11 @@ export default function SubjectPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
 
-  const [activeNav, setActiveNav] = useState('materials')
-  const [discOpen,  setDiscOpen]  = useState(false)
+  const [activeNav,   setActiveNav]   = useState('materials')
+  const [discOpen,    setDiscOpen]    = useState(false)
+  const [showEdit,    setShowEdit]    = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [editForm,    setEditForm]    = useState({ name: '', professor: '', color: '' })
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -39,7 +41,8 @@ export default function SubjectPage() {
   const { data: materials, loading: loadingMat, error: errorMat, refetch: refetchMat } =
     useApi(() => subjectsService.getMaterials(id), [id])
 
-  const { execute: execDelete } = useAction()
+  const { execute: execDelete  } = useAction()
+  const { execute: execSubject } = useAction()
 
   // ── Upload ──
   const handleUpload = async (e) => {
@@ -63,6 +66,25 @@ export default function SubjectPage() {
   const handleDelete = async (matId) => {
     if (!window.confirm('Remover este material?')) return
     await execDelete(() => materialsService.remove(matId), () => refetchMat())
+  }
+
+  const handleEditOpen = () => {
+    setEditForm({ name: subject?.name || '', professor: subject?.professor || '', color: subject?.color || '#5c6bff' })
+    setShowEdit(true)
+  }
+
+  const handleEditSave = async () => {
+    await execSubject(
+      () => subjectsService.update(subject._id, editForm),
+      () => { setShowEdit(false); window.location.reload() }
+    )
+  }
+
+  const handleDeleteSubject = async () => {
+    await execSubject(
+      () => subjectsService.remove(subject._id),
+      () => navigate('/dashboard')
+    )
   }
 
   const categories = [...new Set(materials?.map(m => m.category) ?? [])]
@@ -99,6 +121,20 @@ export default function SubjectPage() {
           <div className="text-[12px]" style={{ color: 'var(--text2)' }}>
             {subject?.professor || 'Sem professor'}
             {subject?.semester?.name ? ` · ${subject.semester.name}` : ''}
+          </div>
+          <div className="flex gap-1.5 mt-3">
+            <button onClick={handleEditOpen}
+              className="flex-1 py-1.5 rounded-sm text-[11.5px] font-medium transition-all"
+              style={{ background: 'var(--surface2)', color: 'var(--text2)', border: '1px solid var(--border)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text2)'}
+            >✏ Editar</button>
+            <button onClick={() => setShowConfirm(true)}
+              className="flex-1 py-1.5 rounded-sm text-[11.5px] font-medium transition-all"
+              style={{ background: 'rgba(255,92,92,0.08)', color: '#ff7070', border: '1px solid rgba(255,92,92,0.15)' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,92,92,0.15)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,92,92,0.08)'}
+            >🗑 Apagar</button>
           </div>
         </div>
 
@@ -221,7 +257,10 @@ export default function SubjectPage() {
 
         {/* ── ABA: TAREFAS ── */}
         {activeNav === 'tasks' && (
-          <TasksTab subjectId={id} subjectColor={subject?.color} />
+          <EmptyState icon="✓" title="Tarefas desta disciplina"
+            description="Gerencie as tarefas no Calendário."
+            action={<button className="btn-ghost" onClick={() => navigate('/calendario')}>Ir para o calendário →</button>}
+          />
         )}
 
         {/* ── ABA: INFORMAÇÕES ── */}
@@ -246,6 +285,60 @@ export default function SubjectPage() {
           </div>
         )}
       </main>
+
+      {/* Modal editar disciplina */}
+      <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Editar disciplina">
+        <div className="flex flex-col gap-4">
+          <FormField label="Nome">
+            <input className="cortex-input" value={editForm.name}
+              onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="Professor">
+            <input className="cortex-input" value={editForm.professor}
+              onChange={e => setEditForm(p => ({ ...p, professor: e.target.value }))}
+              placeholder="Nome do professor"
+            />
+          </FormField>
+          <FormField label="Cor">
+            <div className="flex gap-2 flex-wrap">
+              {['#5c6bff','#c8f560','#ff8fab','#f5a623','#a78bfa','#38bdf8','#fb923c'].map(c => (
+                <button key={c} onClick={() => setEditForm(p => ({ ...p, color: c }))}
+                  className="w-7 h-7 rounded-full transition-all"
+                  style={{
+                    background: c,
+                    outline: editForm.color === c ? '2px solid var(--text)' : 'none',
+                    outlineOffset: 2,
+                    transform: editForm.color === c ? 'scale(1.2)' : 'scale(1)',
+                  }}
+                />
+              ))}
+            </div>
+          </FormField>
+          <div className="flex gap-2 justify-end pt-1">
+            <button className="btn-ghost" onClick={() => setShowEdit(false)}>Cancelar</button>
+            <button className="btn-accent" onClick={handleEditSave}>Salvar</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal confirmar exclusão */}
+      <Modal open={showConfirm} onClose={() => setShowConfirm(false)} title="Apagar disciplina?">
+        <div className="flex flex-col gap-4">
+          <p className="text-[13px]" style={{ color: 'var(--text2)' }}>
+            Tem certeza que deseja apagar <strong style={{ color: 'var(--text)' }}>{subject?.name}</strong>?
+            Todos os materiais e notas serão perdidos.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button className="btn-ghost" onClick={() => setShowConfirm(false)}>Cancelar</button>
+            <button className="py-2 px-4 rounded-sm text-[13px] font-medium transition-all"
+              style={{ background: 'rgba(255,92,92,0.15)', color: '#ff7070' }}
+              onClick={handleDeleteSubject}
+            >Sim, apagar</button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   )
 }
