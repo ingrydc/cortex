@@ -11,10 +11,17 @@ const PRIORITY_META = {
 
 const EMPTY_FORM = { title: '', dueDate: '', priority: 'medium' }
 
+// Parseia data sem bug de timezone
+function parseLocalDate(iso) {
+  const [y, m, d] = iso.substring(0, 10).split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 function formatDate(iso) {
   if (!iso) return ''
-  const d    = new Date(iso)
+  const d    = parseLocalDate(iso)
   const now  = new Date()
+  now.setHours(0, 0, 0, 0)
   const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24))
   if (diff === 0)  return 'Hoje'
   if (diff === 1)  return 'Amanhã'
@@ -24,10 +31,11 @@ function formatDate(iso) {
 }
 
 export default function TasksTab({ subjectId, subjectColor }) {
-  const [showForm, setShowForm] = useState(false)
-  const [form,     setForm]     = useState(EMPTY_FORM)
-  const [filter,   setFilter]   = useState('open') // 'open' | 'done' | 'all'
-  const [formError,setFormError]= useState('')
+  const [showForm,  setShowForm]  = useState(false)
+  const [editTask,  setEditTask]  = useState(null) // tarefa sendo editada
+  const [form,      setForm]      = useState(EMPTY_FORM)
+  const [filter,    setFilter]    = useState('open')
+  const [formError, setFormError] = useState('')
 
   const { data: tasks, loading, error, refetch } =
     useApi(() => tasksService.list({ subject: subjectId }), [subjectId])
@@ -35,6 +43,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
   const { execute: execCreate } = useAction()
   const { execute: execToggle } = useAction()
   const { execute: execDelete } = useAction()
+  const { execute: execUpdate } = useAction()
 
   const filtered = (tasks ?? []).filter(t => {
     if (filter === 'open') return !t.done
@@ -58,6 +67,29 @@ export default function TasksTab({ subjectId, subjectColor }) {
     }
   }
 
+  const handleOpenEdit = (task) => {
+    setEditTask(task)
+    setForm({
+      title:    task.title,
+      dueDate:  task.dueDate ? task.dueDate.substring(0, 10) : '',
+      priority: task.priority || 'medium',
+    })
+    setFormError('')
+  }
+
+  const handleUpdate = async () => {
+    setFormError('')
+    if (!form.title.trim()) { setFormError('Título obrigatório.'); return }
+    try {
+      await execUpdate(
+        () => tasksService.update(editTask._id, form),
+        () => { setEditTask(null); setForm(EMPTY_FORM); refetch() }
+      )
+    } catch (e) {
+      setFormError(e.response?.data?.message || 'Erro ao salvar.')
+    }
+  }
+
   const handleToggle = (task) =>
     execToggle(
       () => tasksService.update(task._id, { done: !task.done }),
@@ -69,8 +101,18 @@ export default function TasksTab({ subjectId, subjectColor }) {
     await execDelete(() => tasksService.remove(id), () => refetch())
   }
 
+  const closeModal = () => {
+    setShowForm(false)
+    setEditTask(null)
+    setForm(EMPTY_FORM)
+    setFormError('')
+  }
+
   if (loading) return <LoadingSpinner message="Carregando tarefas..." />
   if (error)   return <ErrorMessage message={error} onRetry={refetch} />
+
+  const isEditing = !!editTask
+  const modalOpen = showForm || isEditing
 
   return (
     <div className="animate-fade-up">
@@ -99,7 +141,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
           <button key={f.key} onClick={() => setFilter(f.key)}
             className="px-3 py-1.5 rounded-sm text-[12px] font-medium transition-all"
             style={filter === f.key
-              ? { background: subjectColor ?? 'var(--accent)', color: filter === f.key ? 'var(--accent-fg)' : 'var(--text)', opacity: 1 }
+              ? { background: subjectColor ?? 'var(--accent)', color: 'var(--accent-fg)' }
               : { background: 'var(--surface2)', color: 'var(--text2)', border: '1px solid var(--border)' }
             }
           >{f.label}</button>
@@ -119,13 +161,11 @@ export default function TasksTab({ subjectId, subjectColor }) {
           {filtered.map((task, i) => {
             const p    = PRIORITY_META[task.priority] ?? PRIORITY_META.low
             const date = formatDate(task.dueDate)
-            const late = task.dueDate && new Date(task.dueDate) < new Date() && !task.done
+            const late = task.dueDate && parseLocalDate(task.dueDate) < new Date().setHours(0,0,0,0) && !task.done
             return (
               <div key={task._id}
                 className="flex items-start gap-3 px-4 py-3.5 group transition-all"
-                style={{
-                  borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none',
-                }}
+                style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border)' : 'none' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
@@ -146,8 +186,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
                   >{task.title}</div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {date && (
-                      <span className="text-[11px]"
-                        style={{ color: late ? '#ff5c5c' : 'var(--text2)' }}>
+                      <span className="text-[11px]" style={{ color: late ? '#ff5c5c' : 'var(--text2)' }}>
                         {late ? '⚠ ' : ''}{date}
                       </span>
                     )}
@@ -165,21 +204,27 @@ export default function TasksTab({ subjectId, subjectColor }) {
                   </div>
                 </div>
 
-                {/* Delete */}
-                <button
-                  className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center rounded shrink-0"
-                  style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
-                  onClick={() => handleDelete(task._id)}
-                >✕</button>
+                {/* Ações */}
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button
+                    className="text-[11px] w-6 h-6 flex items-center justify-center rounded"
+                    style={{ color: 'var(--text2)', background: 'var(--surface3)' }}
+                    onClick={() => handleOpenEdit(task)}
+                  >✏</button>
+                  <button
+                    className="text-[11px] w-6 h-6 flex items-center justify-center rounded"
+                    style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
+                    onClick={() => handleDelete(task._id)}
+                  >✕</button>
+                </div>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* ── Modal: Nova tarefa ── */}
-      <Modal open={showForm} onClose={() => { setShowForm(false); setFormError(''); setForm(EMPTY_FORM) }}
-        title="Nova tarefa">
+      {/* ── Modal: Nova / Editar tarefa ── */}
+      <Modal open={modalOpen} onClose={closeModal} title={isEditing ? 'Editar tarefa' : 'Nova tarefa'}>
         <div className="flex flex-col gap-4">
           {formError && (
             <div className="px-3 py-2.5 rounded-sm text-[12.5px]"
@@ -192,7 +237,7 @@ export default function TasksTab({ subjectId, subjectColor }) {
             <input className="cortex-input" placeholder="Ex: Entregar trabalho"
               value={form.title}
               onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
+              onKeyDown={e => e.key === 'Enter' && (isEditing ? handleUpdate() : handleCreate())}
               autoFocus
             />
           </FormField>
@@ -217,8 +262,10 @@ export default function TasksTab({ subjectId, subjectColor }) {
           </div>
 
           <div className="flex gap-2 justify-end pt-1">
-            <button className="btn-ghost" onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }}>Cancelar</button>
-            <button className="btn-accent" onClick={handleCreate}>Criar tarefa</button>
+            <button className="btn-ghost" onClick={closeModal}>Cancelar</button>
+            <button className="btn-accent" onClick={isEditing ? handleUpdate : handleCreate}>
+              {isEditing ? 'Salvar' : 'Criar tarefa'}
+            </button>
           </div>
         </div>
       </Modal>

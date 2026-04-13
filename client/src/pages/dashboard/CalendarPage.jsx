@@ -58,16 +58,25 @@ export default function CalendarPage() {
     else setMonth(m => m + 1)
   }
 
-  // ── Dias com evento neste mês/ano ──
-  const eventDays = new Set(
-    (tasks ?? [])
-      .filter(t => {
-        if (!t.dueDate) return false
-        const d = new Date(t.dueDate)
-        return d.getMonth() === month && d.getFullYear() === year
-      })
-      .map(t => new Date(t.dueDate).getDate())
-  )
+  // Parseia data sem bug de timezone (evita UTC shift)
+  const parseLocalDate = (iso) => {
+    const [y, m, d] = iso.substring(0, 10).split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+
+  // ── Dias com evento neste mês/ano → Map de day -> [cores das disciplinas] ──
+  const eventDayColors = {}
+  ;(tasks ?? []).forEach(t => {
+    if (!t.dueDate) return
+    const d = parseLocalDate(t.dueDate)
+    if (d.getMonth() !== month || d.getFullYear() !== year) return
+    const day = d.getDate()
+    if (!eventDayColors[day]) eventDayColors[day] = []
+    const subj = subjects?.find(s => s._id === (t.subject?._id || t.subject))
+    const color = subj?.color || '#5c6bff'
+    if (!eventDayColors[day].includes(color)) eventDayColors[day].push(color)
+  })
+  const eventDays = new Set(Object.keys(eventDayColors).map(Number))
 
   // ── Tarefas dos próximos 30 dias ordenadas por data ──
   const upcoming = (tasks ?? [])
@@ -79,7 +88,7 @@ export default function CalendarPage() {
   const selectedDayTasks = selectedDay
     ? (tasks ?? []).filter(t => {
         if (!t.dueDate) return false
-        const d = new Date(t.dueDate)
+        const d = parseLocalDate(t.dueDate)
         return d.getDate() === selectedDay.day &&
                d.getMonth() === month &&
                d.getFullYear() === year
@@ -144,7 +153,10 @@ export default function CalendarPage() {
             {upcoming.length} evento(s) próximo(s)
           </p>
         </div>
-        <button className="btn-accent" onClick={() => setShowModal(true)}>+ Nova tarefa</button>
+        <button className="btn-accent" onClick={() => {
+          if (selectedDay) setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr + 'T23:59' }))
+          setShowModal(true)
+        }}>+ Nova tarefa</button>
       </div>
 
       {loading ? <LoadingSpinner /> : error ? <ErrorMessage message={error} onRetry={refetch} /> : (
@@ -205,9 +217,13 @@ export default function CalendarPage() {
                   >
                     {d.day}
                     {hasEvent && (
-                      <span className="absolute bottom-1 w-1 h-1 rounded-full"
-                        style={{ background: isToday ? 'var(--accent-fg)' : '#5c6bff' }}
-                      />
+                      <div className="absolute bottom-0.5 flex gap-0.5 justify-center flex-wrap max-w-full px-0.5">
+                        {(eventDayColors[d.day] || []).map((color, ci) => (
+                          <span key={ci} className="w-1 h-1 rounded-full shrink-0"
+                            style={{ background: isToday ? 'var(--accent-fg)' : color }}
+                          />
+                        ))}
+                      </div>
                     )}
                   </div>
                 )
@@ -238,7 +254,7 @@ export default function CalendarPage() {
                   <p className="text-[13px]" style={{ color: 'var(--text2)' }}>Nenhuma tarefa neste dia</p>
                   <button className="btn-accent text-[12px] mt-1"
                     onClick={() => {
-                      setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr }))
+                      setNewTask(p => ({ ...p, dueDate: selectedDay.dateStr + 'T23:59' }))
                       setShowModal(true)
                     }}
                   >+ Criar tarefa</button>
@@ -340,7 +356,7 @@ export default function CalendarPage() {
       )}
 
       {/* ── MODAL NOVA TAREFA ── */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Nova tarefa">
+      <Modal open={showModal} onClose={() => { setShowModal(false); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }} title="Nova tarefa">
         <div className="flex flex-col gap-4">
 
           <FormField label="Título *">
