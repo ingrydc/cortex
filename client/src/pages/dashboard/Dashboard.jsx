@@ -354,7 +354,7 @@ export default function Dashboard() {
         </div>
       </Modal>
 
-      {/* ── Modal: Novo semestre ── */}}
+      {/* ── Modal: Novo semestre ── */}
       <Modal open={showNewSem} onClose={() => { setShowNewSem(false); setSemError('') }} title="Novo semestre">
         <div className="flex flex-col gap-4">
           {semError && (
