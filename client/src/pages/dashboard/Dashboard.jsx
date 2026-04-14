@@ -318,7 +318,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      </> /* fim aba semestre */}
+      </>}
 
       {/* ── Modal: Editar tarefa ── */}
       <Modal open={!!editTask} onClose={() => setEditTask(null)} title="Editar tarefa">
