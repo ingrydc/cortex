@@ -1,55 +1,60 @@
-import React, { useState } from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { useApi, useAction } from 'your-hooks';
+import { Modal } from 'components/ui';
+import tasksService from 'services/tasksService';
 
 const TasksTab = () => {
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const tasks = [/* Array of task objects */]; // Replace this with actual task data
+    const [tasks, setTasks] = useState([]);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const api = useApi();
+    const action = useAction();
 
-  const handleTaskClick = (task) => {
-    setSelectedTask(task);
-    setShowModal(true);
-  };
+    useEffect(() => {
+        const fetchTasks = async () => {
+            const response = await tasksService.list({ filter: 'your-filter-parameter' });
+            setTasks(response.data);
+        };
+        fetchTasks();
+    }, []);
 
-  const handleCloseModal = () => setShowModal(false);
+    const handleCreateTask = async (taskData) => {
+        await tasksService.create(taskData);
+        action.refresh();
+    };
 
-  const handleEditTask = () => {
-    // Implement edit functionality here
-  };
+    const handleEditTask = async (taskData) => {
+        await tasksService.update(taskData.id, taskData);
+        action.refresh();
+    };
 
-  const handleDeleteTask = () => {
-    // Implement delete functionality here
-  };
+    const handleMarkAsDone = async (taskId) => {
+        await tasksService.markAsDone(taskId);
+        action.refresh();
+    };
 
-  return (
-    <div>
-      <h2>Tasks</h2>
-      <ul>
-        {tasks.map((task) => (
-          <li key={task.id} onClick={() => handleTaskClick(task)}>
-            {task.title} - {task.dueDate}
-          </li>
-        ))}
-      </ul>
+    const handleDeleteTask = async (taskId) => {
+        await tasksService.delete(taskId);
+        action.refresh();
+    };
 
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>{selectedTask?.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Due Date: {selectedTask?.dueDate}</p>
-          <p>Priority: {selectedTask?.priority}</p>
-          <p>Created Date: {selectedTask?.createdDate}</p>
-          <p>Status: {selectedTask?.done ? 'Done' : 'Not Done'}</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>Close</Button>
-          <Button variant="primary" onClick={handleEditTask}>Edit</Button>
-          <Button variant="danger" onClick={handleDeleteTask}>Delete</Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
-  );
+    return (
+        <div>
+            <h1>Tasks</h1>
+            <button onClick={() => setModalOpen(true)}>Create New Task</button>
+            <ul>
+                {tasks.map(task => (
+                    <li key={task.id}>
+                        {task.name}
+                        <button onClick={() => handleEditTask(task)}>Edit</button>
+                        <button onClick={() => handleMarkAsDone(task.id)}>Done</button>
+                        <button onClick={() => handleDeleteTask(task.id)}>Delete</button>
+                    </li>
+                ))}
+            </ul>
+            {isModalOpen && <Modal onClose={() => setModalOpen(false)} onSubmit={handleCreateTask} task={selectedTask} />}
+        </div>
+    );
 };
 
 export default TasksTab;
