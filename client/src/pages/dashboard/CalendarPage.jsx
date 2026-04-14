@@ -33,11 +33,11 @@ export default function CalendarPage() {
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth())
   const [year,  setYear]  = useState(now.getFullYear())
-  const [showModal, setShowModal] = useState(false)
+  const [showModal,  setShowModal]  = useState(false)
   const [selectedDay, setSelectedDay] = useState(null)
-  const [newTask, setNewTask] = useState({ title: '', dueDate: '', priority: 'medium', subject: '' })
-  const [editTask,  setEditTask]  = useState(null)
-  const [activeTask, setActiveTask] = useState(null)
+  const [newTask,    setNewTask]    = useState({ title: '', dueDate: '', priority: 'medium', subject: '' })
+  const [editTask,   setEditTask]   = useState(null)
+  const [editForm,   setEditForm]   = useState({ title: '', dueDate: '', priority: 'medium', subject: '' })
 
   // ── Fetch: tarefas com dueDate ──
   const { data: tasks, loading, error, refetch } =
@@ -117,9 +117,10 @@ export default function CalendarPage() {
   }
 
   // ── Editar tarefa ──
-  const handleOpenEdit = (task) => {
+  const openEditTask = (task, e) => {
+    e?.stopPropagation()
     setEditTask(task)
-    setNewTask({
+    setEditForm({
       title:    task.title,
       dueDate:  task.dueDate ? task.dueDate.substring(0, 10) : '',
       priority: task.priority || 'medium',
@@ -127,11 +128,11 @@ export default function CalendarPage() {
     })
   }
 
-  const handleUpdate = async () => {
-    if (!newTask.title.trim()) return
+  const handleUpdateTask = async () => {
+    if (!editForm.title.trim()) return
     await execUpdate(
-      () => tasksService.update(editTask._id, newTask),
-      () => { setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }); refetch() }
+      () => tasksService.update(editTask._id, editForm),
+      () => { setEditTask(null); refetch() }
     )
   }
 
@@ -312,13 +313,11 @@ export default function CalendarPage() {
                             )}
                           </div>
                           <div className="flex gap-1 shrink-0 mt-0.5">
-                            <button
-                              className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                            <button className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
                               style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
-                              onClick={() => handleOpenEdit(t)}
+                              onClick={(e) => openEditTask(t, e)}
                             >✏</button>
-                            <button
-                              className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                            <button className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
                               style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
                               onClick={() => handleDelete(t._id)}
                             >✕</button>
@@ -370,13 +369,11 @@ export default function CalendarPage() {
                         </div>
                         {/* ações */}
                         <div className="flex gap-1 shrink-0 mt-0.5">
-                          <button
-                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                          <button className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
                             style={{ color: 'var(--text3)', background: 'var(--surface3)' }}
-                            onClick={() => handleOpenEdit(t)}
+                            onClick={(e) => openEditTask(t, e)}
                           >✏</button>
-                          <button
-                            className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
+                          <button className="text-[11px] opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center"
                             style={{ color: '#ff7070', background: 'rgba(255,92,92,0.1)' }}
                             onClick={() => handleDelete(t._id)}
                           >✕</button>
@@ -393,7 +390,7 @@ export default function CalendarPage() {
       )}
 
       {/* ── MODAL NOVA TAREFA ── */}
-      <Modal open={showModal || !!editTask} onClose={() => { setShowModal(false); setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }} title={editTask ? 'Editar tarefa' : 'Nova tarefa'}>
+      <Modal open={showModal} onClose={() => { setShowModal(false); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }} title="Nova tarefa">
         <div className="flex flex-col gap-4">
 
           <FormField label="Título *">
@@ -450,8 +447,53 @@ export default function CalendarPage() {
           )}
 
           <div className="flex gap-2 justify-end pt-1">
-            <button className="btn-ghost" onClick={() => { setShowModal(false); setEditTask(null); setNewTask({ title: '', dueDate: '', priority: 'medium', subject: '' }) }}>Cancelar</button>
-            <button className="btn-accent" onClick={editTask ? handleUpdate : handleCreate}>{editTask ? 'Salvar' : 'Criar tarefa'}</button>
+            <button className="btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
+            <button className="btn-accent" onClick={handleCreate}>Criar tarefa</button>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* ── Modal: Editar tarefa ── */}
+      <Modal open={!!editTask} onClose={() => setEditTask(null)} title="Editar tarefa">
+        <div className="flex flex-col gap-4">
+          <FormField label="Título *">
+            <input className="cortex-input" value={editForm.title}
+              onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handleUpdateTask()}
+              autoFocus
+            />
+          </FormField>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Data">
+              <input className="cortex-input" type="date" value={editForm.dueDate}
+                onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))}
+                style={{ colorScheme: 'dark' }}
+              />
+            </FormField>
+            <FormField label="Prioridade">
+              <select className="cortex-input" value={editForm.priority}
+                onChange={e => setEditForm(p => ({ ...p, priority: e.target.value }))}
+                style={{ background: 'var(--surface2)' }}>
+                <option value="low">Baixa</option>
+                <option value="medium">Média</option>
+                <option value="high">Alta</option>
+              </select>
+            </FormField>
+          </div>
+          {subjects?.length > 0 && (
+            <FormField label="Disciplina">
+              <select className="cortex-input" value={editForm.subject}
+                onChange={e => setEditForm(p => ({ ...p, subject: e.target.value }))}
+                style={{ background: 'var(--surface2)' }}>
+                <option value="">Sem disciplina</option>
+                {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+              </select>
+            </FormField>
+          )}
+          <div className="flex gap-2 justify-end pt-1">
+            <button className="btn-ghost" onClick={() => setEditTask(null)}>Cancelar</button>
+            <button className="btn-accent" onClick={handleUpdateTask}>Salvar</button>
           </div>
         </div>
       </Modal>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useApi, useAction } from '@/hooks/useApi'
@@ -22,10 +22,9 @@ export default function Dashboard() {
   const [newSubject,setNewSubject]= useState({ name: '', professor: '', color: '#5c6bff' })
   const [semError,  setSemError]  = useState('')
   const [subjError, setSubjError] = useState('')
-  const [activeTab,  setActiveTab]  = useState('semestre')
+  const [activeTab,  setActiveTab]  = useState('semestre') // 'semestre' | 'horas'
   const [editTask,   setEditTask]   = useState(null)
   const [editForm,   setEditForm]   = useState({ title: '', dueDate: '', priority: 'medium' })
-  const [activeTask, setActiveTask] = useState(null)
 
   // ── Fetch ──
   const { data: semesters, loading: loadingSem, error: errorSem, refetch: refetchSem } =
@@ -39,6 +38,13 @@ export default function Dashboard() {
 
   const { data: tasks, loading: loadingTasks, refetch: refetchTasks } =
     useApi(() => tasksService.list({ done: false }))
+
+  // Refetch ao voltar para o dashboard (ex: após concluir tarefa em disciplina)
+  useEffect(() => {
+    refetchSubj()
+    refetchTasks()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { execute: execSem   } = useAction()
   const { execute: execSubj  } = useAction()
@@ -109,7 +115,25 @@ export default function Dashboard() {
   }
 
   const handleToggleTask = (task) =>
-    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => refetchTasks())
+    execToggle(() => tasksService.update(task._id, { done: !task.done }), () => { refetchTasks(); refetchSubj() })
+
+  const openEditTask = (task, e) => {
+    e?.stopPropagation()
+    setEditTask(task)
+    setEditForm({
+      title:    task.title,
+      dueDate:  task.dueDate ? task.dueDate.substring(0, 10) : '',
+      priority: task.priority || 'medium',
+    })
+  }
+
+  const handleUpdateTask = async () => {
+    if (!editForm.title.trim()) return
+    await execUpdate(
+      () => tasksService.update(editTask._id, editForm),
+      () => { setEditTask(null); refetchTasks(); refetchSubj() }
+    )
+  }
 
   if (loadingSem) return <LoadingSpinner message="Carregando..." />
   if (errorSem)   return <ErrorMessage message={errorSem} onRetry={refetchSem} />
@@ -261,8 +285,8 @@ export default function Dashboard() {
                 {tasks.slice(0, 6).map(t => (
                   <div key={t._id}
                     className="flex items-start gap-2.5 px-3 py-2.5 rounded-sm cursor-pointer transition-all"
-                    style={{ background: activeTask === t._id ? 'var(--surface2)' : 'transparent' }}
-                    onClick={() => setActiveTask(prev => prev === t._id ? null : t._id)}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <div className="w-4 h-4 rounded shrink-0 mt-0.5 flex items-center justify-center text-[10px] cursor-pointer"
                       style={t.done
@@ -282,12 +306,10 @@ export default function Dashboard() {
                     </div>
                     {t.priority === 'high'   && !t.done && <span className="badge-red shrink-0">urgente</span>}
                     {t.priority === 'medium' && !t.done && <span className="badge-yellow shrink-0">médio</span>}
-                    {activeTask === t._id && (
-                      <button className="w-5 h-5 rounded flex items-center justify-center text-[11px] shrink-0 ml-auto"
-                        style={{ background: 'var(--surface3)', color: 'var(--text2)' }}
-                        onClick={(e) => handleOpenEditTask(t, e)}
-                      >✏</button>
-                    )}
+                    <button className="w-5 h-5 rounded flex items-center justify-center text-[11px] shrink-0 ml-1 opacity-0 hover:opacity-100 transition-opacity"
+                      style={{ background: 'var(--surface3)', color: 'var(--text2)' }}
+                      onClick={(e) => openEditTask(t, e)}
+                    >✏</button>
                   </div>
                 ))}
               </div>
@@ -301,7 +323,7 @@ export default function Dashboard() {
       {/* ── Modal: Editar tarefa ── */}
       <Modal open={!!editTask} onClose={() => setEditTask(null)} title="Editar tarefa">
         <div className="flex flex-col gap-4">
-          <FormField label="Título">
+          <FormField label="Título *">
             <input className="cortex-input" value={editForm.title}
               onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && handleUpdateTask()}
@@ -310,8 +332,7 @@ export default function Dashboard() {
           </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Data">
-              <input className="cortex-input" type="date"
-                value={editForm.dueDate}
+              <input className="cortex-input" type="date" value={editForm.dueDate}
                 onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))}
                 style={{ colorScheme: 'dark' }}
               />
